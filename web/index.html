@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#161713" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Terminais" />
+    <link
+      rel="manifest"
+      href="/manifest.webmanifest"
+      crossorigin="use-credentials"
+    />
+    <link rel="apple-touch-icon" href="/assets/icon-192.png" />
+    <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/vendor/xterm.css" />
+    <link rel="stylesheet" href="/assets/style.css?v=23" />
+    <title>Terminais · local</title>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <header class="topbar">
+        <button
+          class="project-picker"
+          id="project-picker"
+          aria-label="Trocar de projeto"
+        >
+          <span class="project-title"
+            ><span id="project-name">Carregando…</span
+            ><span aria-hidden="true">⌄</span></span
+          >
+        </button>
+        <div class="header-actions">
+          <span class="connection" id="connection" role="status"
+            >Conectando</span
+          >
+          <div class="font-menu">
+            <button
+              class="font-toggle"
+              id="font-toggle"
+              aria-label="Tamanho da fonte"
+              aria-expanded="false"
+              aria-controls="font-popover"
+              title="Tamanho da fonte"
+            >
+              Aa
+            </button>
+            <div class="font-popover" id="font-popover" hidden>
+              <button id="font-down" aria-label="Diminuir fonte">A−</button
+              ><span id="font-size" class="font-size" aria-live="polite"></span
+              ><button id="font-up" aria-label="Aumentar fonte">A+</button>
+            </div>
+          </div>
+          <button
+            class="font-toggle quota-toggle"
+            id="quota-tab"
+            aria-label="Quotas"
+            aria-controls="quota-panel"
+            aria-pressed="false"
+            title="Quotas"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 17a8 8 0 1 1 16 0M12 17l4-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="1.4" fill="currentColor"/></svg>
+            <span class="quota-countdown" id="quota-countdown" hidden></span>
+          </button>
+          <details class="app-menu" id="app-menu">
+            <summary class="icon-button app-menu-toggle" id="app-menu-toggle" aria-label="Mais opções" title="Mais opções">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="5" r="1.7" fill="currentColor"/><circle cx="12" cy="12" r="1.7" fill="currentColor"/><circle cx="12" cy="19" r="1.7" fill="currentColor"/></svg>
+            </summary>
+            <div class="app-menu-panel">
+              <button class="push-toggle" id="push-button" aria-label="Notificações" aria-pressed="false" title="Notificações" hidden>
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                <span id="push-label">Notificações</span>
+              </button>
+              <button id="install-button" aria-label="Instalar aplicativo">
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>Instalar aplicativo</span>
+              </button>
+            </div>
+          </details>
+        </div>
+      </header>
+      <nav class="tabs" aria-label="Terminais e quotas">
+        <div id="tabs" class="tab-list"></div>
+        <button class="add-tab files-toggle" id="files-toggle" aria-label="Arquivos do projeto" aria-haspopup="dialog" aria-controls="files-dialog" title="Arquivos do projeto">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="add-tab" id="add-tab" aria-label="Novo terminal">
+          +
+        </button>
+      </nav>
+      <button id="attention-summary" class="attention-summary" hidden aria-haspopup="dialog">
+        <span class="attention-mark" aria-hidden="true">!</span>
+        <span class="attention-copy"><strong id="attention-title"></strong><small id="attention-preview"></small></span>
+        <span id="attention-count"></span><span aria-hidden="true">›</span>
+      </button>
+      <span id="attention-announcement" class="sr-only" role="status" aria-live="polite"></span>
+      <main class="workspace">
+        <section id="quota-panel" class="quota-panel" aria-labelledby="quota-heading" hidden>
+          <div class="quota-heading">
+            <div><span class="eyebrow">9ROUTER / TODAS AS CONTAS</span><h1 id="quota-heading">Quotas disponíveis</h1></div>
+            <button id="quota-refresh">Atualizar</button>
+          </div>
+          <p id="quota-status" class="quota-status" role="status">Consultando o 9router…</p>
+          <p id="quota-error" class="quota-error" role="alert" hidden></p>
+          <p class="quota-help">Arraste pelo ⠿ ou use ↑ ↓ para mudar a prioridade.</p>
+          <div id="quota-accounts" class="quota-accounts"></div>
+          <p class="quota-note">A ordem é salva no 9router para cada provedor. Percentuais indicam o saldo disponível; atualização automática a cada minuto enquanto esta aba está aberta.</p>
+        </section>
+        <div id="terminal" aria-label="Terminal interativo"></div>
+        <button id="scroll-bottom" class="scroll-bottom" hidden>Voltar ao fim ↓</button>
+        <div class="empty" id="empty" hidden>
+          <span class="empty-mark" aria-hidden="true">&gt;_</span>
+          <h1>Seu próximo passo.</h1>
+          <p>Abra um terminal nesta pasta para começar.</p>
+          <div class="agent-buttons">
+            <button data-launch="codex"><svg class="agent-logo logo-codex" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M8.086.457a6.105 6.105 0 013.046-.415c1.333.153 2.521.72 3.564 1.7a.117.117 0 00.107.029c1.408-.346 2.762-.224 4.061.366l.063.03.154.076c1.357.703 2.33 1.77 2.918 3.198.278.679.418 1.388.421 2.126a5.655 5.655 0 01-.18 1.631.167.167 0 00.04.155 5.982 5.982 0 011.578 2.891c.385 1.901-.01 3.615-1.183 5.14l-.182.22a6.063 6.063 0 01-2.934 1.851.162.162 0 00-.108.102c-.255.736-.511 1.364-.987 1.992-1.199 1.582-2.962 2.462-4.948 2.451-1.583-.008-2.986-.587-4.21-1.736a.145.145 0 00-.14-.032c-.518.167-1.04.191-1.604.185a5.924 5.924 0 01-2.595-.622 6.058 6.058 0 01-2.146-1.781c-.203-.269-.404-.522-.551-.821a7.74 7.74 0 01-.495-1.283 6.11 6.11 0 01-.017-3.064.166.166 0 00.008-.074.115.115 0 00-.037-.064 5.958 5.958 0 01-1.38-2.202 5.196 5.196 0 01-.333-1.589 6.915 6.915 0 01.188-2.132c.45-1.484 1.309-2.648 2.577-3.493.282-.188.55-.334.802-.438.286-.12.573-.22.861-.304a.129.129 0 00.087-.087A6.016 6.016 0 015.635 2.31C6.315 1.464 7.132.846 8.086.457zm-.804 7.85a.848.848 0 00-1.473.842l1.694 2.965-1.688 2.848a.849.849 0 001.46.864l1.94-3.272a.849.849 0 00.007-.854l-1.94-3.393zm5.446 6.24a.849.849 0 000 1.695h4.848a.849.849 0 000-1.696h-4.848z"/></svg>Abrir Codex</button
+            ><button data-launch="claude"><svg class="agent-logo logo-claude" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg>Abrir Claude</button>
+          </div>
+        </div>
+        <div class="reconnect" id="reconnect" hidden>
+          <span id="reconnect-text">Reconectando ao computador…</span
+          ><button id="retry">Tentar agora</button>
+        </div>
+      </main>
+      <footer class="controls">
+        <div class="keybar" aria-label="Teclas do terminal">
+          <button id="attachment-toggle" class="attachment-toggle" aria-label="Adicionar anexos" aria-haspopup="dialog" aria-controls="attachment-dialog" title="Adicionar anexos" disabled>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m8 12 6.6-6.6a3 3 0 0 1 4.2 4.2L10 18.4a4.5 4.5 0 0 1-6.4-6.4l9-9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="terminal-keys">
+            <button data-key="\u001b">Esc</button
+            ><button data-key="\t" data-shift-key="\u001b[Z">Tab</button
+            ><button id="shift-key" class="modifier-key" aria-pressed="false" aria-label="Shift (vale para a próxima tecla)">⇧ Shift</button
+            ><button data-key="\u001b[D" data-shift-key="\u001b[1;2D" aria-label="Seta para a esquerda">←</button
+            ><button data-key="\u001b[A" data-shift-key="\u001b[1;2A" aria-label="Seta para cima">↑</button
+            ><button data-key="\u001b[B" data-shift-key="\u001b[1;2B" aria-label="Seta para baixo">↓</button
+            ><button data-key="\u001b[C" data-shift-key="\u001b[1;2C" aria-label="Seta para a direita">→</button
+            ><button data-key="\u0003">Ctrl C</button
+            ><button data-key="\u001a">Ctrl Z</button
+            ><button data-key="\r" data-shift-key="\u001b\r">Enter</button
+            ><button data-command="/clear" aria-label="Enviar /clear">/clear</button>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <dialog id="attachment-dialog" class="sheet attachment-sheet" aria-labelledby="attachment-heading">
+      <div class="sheet-heading">
+        <div><span class="eyebrow" id="attachment-target"></span><h2 id="attachment-heading">Adicionar anexos</h2></div>
+        <button class="icon-button" data-close aria-label="Fechar anexos">×</button>
+      </div>
+      <div class="attachment-actions">
+        <button id="attachment-choose">Escolher arquivos</button>
+        <button id="attachment-paste">Colar imagem</button>
+      </div>
+      <input id="attachment-input" type="file" multiple hidden />
+      <p class="attachment-help" id="attachment-help">Fotos, capturas e documentos · até 8 arquivos, 20 MB no total. Você também pode colar uma imagem aqui.</p>
+      <div id="attachment-clipboard" class="attachment-clipboard" contenteditable="true" role="textbox" aria-label="Colar imagem aqui" data-placeholder="Toque e segure aqui para colar" hidden></div>
+      <div id="attachment-list" class="attachment-list" aria-label="Anexos selecionados"></div>
+      <p id="attachment-status" class="attachment-status" role="status" aria-live="polite" hidden></p>
+      <button id="attachment-insert" class="wide-button primary" disabled>Adicionar à conversa</button>
+      <p class="attachment-note">Os anexos entram no campo da mensagem. Depois, escreva sua instrução e toque em Enter para enviar.</p>
+    </dialog>
+    <dialog id="files-dialog" class="sheet files-sheet" aria-labelledby="files-heading">
+      <div class="sheet-heading files-heading">
+        <div><span class="eyebrow" id="files-project"></span><h2 id="files-heading">Arquivos</h2></div>
+        <button class="icon-button" data-close aria-label="Fechar arquivos">×</button>
+      </div>
+      <div class="files-layout" id="files-layout">
+        <section class="files-browser" aria-label="Pastas e arquivos">
+          <div class="files-location">
+            <button id="files-up" aria-label="Pasta anterior" title="Pasta anterior">↑</button>
+            <span id="files-path" dir="auto">/</span>
+            <button id="files-refresh" aria-label="Atualizar arquivos" title="Atualizar arquivos">↻</button>
+          </div>
+          <div class="files-filter">
+            <input id="files-filter" type="search" placeholder="Filtrar nesta pasta…" aria-label="Filtrar arquivos nesta pasta" autocomplete="off" spellcheck="false" />
+            <button id="files-hidden" aria-label="Mostrar arquivos ocultos" aria-pressed="false" title="Arquivos ocultos">.*</button>
+          </div>
+          <div class="files-transfer">
+            <button id="files-upload" title="Enviar para esta pasta · até 100 MB por arquivo" disabled>↑ Enviar arquivos</button>
+            <button id="files-upload-cancel" hidden>Cancelar</button>
+            <input id="files-upload-input" type="file" multiple hidden />
+          </div>
+          <p id="files-transfer-status" class="files-status" role="status" hidden></p>
+          <p id="files-status" class="files-status" role="status"></p>
+          <div id="files-list" class="files-list"></div>
+        </section>
+        <section id="file-viewer" class="file-viewer" aria-label="Visualização do arquivo" hidden>
+          <div class="file-toolbar">
+            <button id="file-back" aria-label="Voltar aos arquivos">←</button>
+            <div class="file-title"><strong id="file-name"></strong><small id="file-meta"></small></div>
+            <a id="file-download" class="file-download" aria-label="Baixar arquivo" title="Baixar arquivo" download>↓</a>
+            <button id="file-mode" aria-pressed="false" hidden>Código</button>
+          </div>
+          <p id="file-status" class="files-status" role="status"></p>
+          <div id="file-content" class="file-content">
+            <article id="file-markdown" class="file-markdown" hidden></article>
+            <pre id="file-source" class="file-source" tabindex="0" hidden></pre>
+            <div id="file-media" class="file-media" hidden></div>
+            <iframe id="file-html" class="file-html" title="Prévia do HTML" sandbox="allow-scripts" referrerpolicy="no-referrer" hidden></iframe>
+          </div>
+        </section>
+      </div>
+    </dialog>
+    <dialog id="attention-dialog" class="sheet" aria-labelledby="attention-heading">
+      <div class="sheet-heading">
+        <div><span class="eyebrow">TODOS OS PROJETOS</span><h2 id="attention-heading">Alertas</h2></div>
+        <button class="icon-button" data-close aria-label="Fechar">×</button>
+      </div>
+      <div id="attention-list" class="attention-list"></div>
+      <p class="attention-note">Pedidos de confirmação são reconhecidos pela tela e podem precisar de verificação. Os avisos são atualizados enquanto o painel está aberto.</p>
+    </dialog>
+    <dialog id="project-dialog" class="sheet">
+      <div class="sheet-heading">
+        <div>
+          <span class="eyebrow">SEU COMPUTADOR</span>
+          <h2>Projetos</h2>
+        </div>
+        <button class="icon-button" data-close aria-label="Fechar">×</button>
+      </div>
+      <div id="projects" class="project-list"></div>
+      <button class="wide-button" id="browse-project">
+        + Adicionar uma pasta
+      </button>
+    </dialog>
+    <dialog id="folder-dialog" class="sheet">
+      <div class="sheet-heading">
+        <div>
+          <span class="eyebrow">NOVO PROJETO</span>
+          <h2>Escolha a pasta</h2>
+        </div>
+        <button class="icon-button" data-close aria-label="Fechar">×</button>
+      </div>
+      <form id="path-form" class="path-form">
+        <label class="sr-only" for="folder-path">Caminho da pasta</label
+        ><input
+          id="folder-path"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Caminho da pasta"
+        /><button type="submit">Ir</button>
+      </form>
+      <div id="directories" class="directory-list"></div>
+      <button class="wide-button primary" id="choose-folder">
+        Usar esta pasta
+      </button>
+    </dialog>
+    <dialog id="agent-dialog" class="sheet">
+      <div class="sheet-heading">
+        <div>
+          <span class="eyebrow" id="agent-project"></span>
+          <h2>Novo terminal</h2>
+        </div>
+        <button class="icon-button" data-close aria-label="Fechar">×</button>
+      </div>
+      <div class="launch-list">
+        <button data-launch="codex">
+          <span class="agent-letter"><svg class="agent-logo logo-codex" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M8.086.457a6.105 6.105 0 013.046-.415c1.333.153 2.521.72 3.564 1.7a.117.117 0 00.107.029c1.408-.346 2.762-.224 4.061.366l.063.03.154.076c1.357.703 2.33 1.77 2.918 3.198.278.679.418 1.388.421 2.126a5.655 5.655 0 01-.18 1.631.167.167 0 00.04.155 5.982 5.982 0 011.578 2.891c.385 1.901-.01 3.615-1.183 5.14l-.182.22a6.063 6.063 0 01-2.934 1.851.162.162 0 00-.108.102c-.255.736-.511 1.364-.987 1.992-1.199 1.582-2.962 2.462-4.948 2.451-1.583-.008-2.986-.587-4.21-1.736a.145.145 0 00-.14-.032c-.518.167-1.04.191-1.604.185a5.924 5.924 0 01-2.595-.622 6.058 6.058 0 01-2.146-1.781c-.203-.269-.404-.522-.551-.821a7.74 7.74 0 01-.495-1.283 6.11 6.11 0 01-.017-3.064.166.166 0 00.008-.074.115.115 0 00-.037-.064 5.958 5.958 0 01-1.38-2.202 5.196 5.196 0 01-.333-1.589 6.915 6.915 0 01.188-2.132c.45-1.484 1.309-2.648 2.577-3.493.282-.188.55-.334.802-.438.286-.12.573-.22.861-.304a.129.129 0 00.087-.087A6.016 6.016 0 015.635 2.31C6.315 1.464 7.132.846 8.086.457zm-.804 7.85a.848.848 0 00-1.473.842l1.694 2.965-1.688 2.848a.849.849 0 001.46.864l1.94-3.272a.849.849 0 00.007-.854l-1.94-3.393zm5.446 6.24a.849.849 0 000 1.695h4.848a.849.849 0 000-1.696h-4.848z"/></svg></span
+          ><span
+            ><strong>Codex</strong
+            ><small>Nova conversa neste projeto</small></span
+          ><span aria-hidden="true">↗</span></button
+        ><button data-launch="claude">
+          <span class="agent-letter"><svg class="agent-logo logo-claude" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg></span
+          ><span
+            ><strong>Claude</strong
+            ><small>Nova conversa neste projeto</small></span
+          ><span aria-hidden="true">↗</span></button
+        ><button data-launch="shell">
+          <span class="agent-letter">&gt;_</span
+          ><span
+            ><strong>Terminal</strong
+            ><small>Shell na pasta do projeto</small></span
+          ><span aria-hidden="true">↗</span>
+        </button>
+      </div>
+    </dialog>
+    <dialog id="window-dialog" class="sheet" aria-labelledby="window-heading">
+      <div class="sheet-heading">
+        <div>
+          <span class="eyebrow" id="window-project"></span>
+          <h2 id="window-heading"></h2>
+        </div>
+        <button class="icon-button" data-close aria-label="Fechar">×</button>
+      </div>
+      <p class="close-copy" id="window-close-copy"></p>
+      <div class="close-actions">
+        <button data-close>Cancelar</button
+        ><button class="danger-button" id="window-close">Encerrar terminal</button>
+      </div>
+    </dialog>
+    <dialog id="install-dialog" class="sheet">
+      <div class="sheet-heading">
+        <div>
+          <span class="eyebrow">NA TELA INICIAL</span>
+          <h2>Leve os terminais.</h2>
+        </div>
+        <button class="icon-button" data-close aria-label="Fechar">×</button>
+      </div>
+      <div id="install-instructions" class="install-copy"></div>
+    </dialog>
+    <div id="toast" class="toast" role="alert" hidden></div>
+    <script src="/assets/vendor/xterm.js"></script>
+    <script src="/assets/vendor/addon-fit.js"></script>
+    <script src="/assets/app.js?v=26"></script>
+    <script src="/assets/files.js?v=20"></script>
+    <script src="/assets/attachments.js?v=20"></script>
+  </body>
+</html>
