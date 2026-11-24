@@ -4,6 +4,12 @@ Painel web e PWA para usar **Codex, Claude Code e Bash pelo celular**, com sess�
 
 Abas por projeto, teclado auxiliar, histórico com gestos, anexos nas conversas, explorador de arquivos com upload/download e prévias de Markdown, HTML, imagens, áudio e vídeo. Inclui alertas, Web Push e painel de quotas/prioridades integrado ao 9router.
 
+| Terminal no celular | Quotas e prioridades | Arquivos e prévias |
+| :---: | :---: | :---: |
+| [![Terminal com abas Codex, Claude e shell](docs/screenshots/terminal-mobile.png)](docs/screenshots/terminal-mobile.png) | [![Painel de quotas e prioridades das contas](docs/screenshots/quotas-mobile.png)](docs/screenshots/quotas-mobile.png) | [![Prévia de Markdown no explorador de arquivos](docs/screenshots/files-mobile.png)](docs/screenshots/files-mobile.png) |
+
+*Capturas da interface real com conversas e contas fictícias. Toque nas imagens para ampliar.*
+
 ## Requisitos
 
 - Linux ou Ubuntu no WSL2; Python 3.12+, Bash, tmux 3.2+, OpenSSL e `python3-venv`.
